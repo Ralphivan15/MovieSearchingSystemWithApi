@@ -1,0 +1,33 @@
+Database: `movie_db`
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+
+CREATE TABLE `movies` (
+  `movie_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `search_count` int(11) NOT NULL,
+  `poster_url` varchar(255) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+
+CREATE TABLE `ratings` (
+  `rating_id` int(11) NOT NULL,
+  `movie_id` int(11) NOT NULL,
+  `rating_value` int(11) NOT NULL,
+  `created_at` int(11) NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+ALTER TABLE `movies`
+  ADD PRIMARY KEY (`movie_id`);
+
+ALTER TABLE `ratings`
+  ADD PRIMARY KEY (`rating_id`);
+
+ALTER TABLE `movies`
+  MODIFY `movie_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1460191;
+
+ALTER TABLE `ratings`
+  MODIFY `rating_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+COMMIT;
