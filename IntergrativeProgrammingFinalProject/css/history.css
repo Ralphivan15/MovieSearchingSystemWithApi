@@ -1,0 +1,97 @@
+body {
+    margin: 0;
+    background: url('../imgs/background1.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #eaeae5;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+    text-align: center;
+}
+h1 {
+    color: #eaeae5;
+    text-align: center;
+    margin-bottom: 30px;
+}
+.movie-container {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 20px;
+}
+.movie-item {
+    width: 200px;
+    background-color: rgba(255, 255, 255, 0.315);
+    border-radius: 10px;
+    box-shadow: 0 2px 6px rgba(255, 255, 255, 0.568);
+    padding: 15px;
+    position: relative;
+    text-align: center;
+}
+.movie-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+.movie-info h3 {
+    margin: 0;
+    font-size: 18px;
+    color: #eaeae5;
+}
+.movie-info p {
+    margin: 5px 0 0;
+    color: #eaeae5;
+    font-size: 14px;
+}
+.rank-badge {
+    position: absolute;
+    top: -10px;
+    left: -10px;
+    background: #eee;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 22px;
+}
+.rank-1 {
+    background-color: gold;
+    color: white;
+}
+.rank-2 {
+    background-color: silver;
+    color: white;
+}
+.rank-3 {
+    background-color: #cd7f32;
+    color: white;
+}
+.rank-default {
+    background-color: #555;
+    color: white;
+}
+.back-button {
+    display: block;
+    margin: 60px auto 0;
+    padding: 12px 25px;
+    background-color: #cb1a24;
+    color: #eaeae5;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    text-align: center;
+    width: fit-content;
+}
+.back-button:hover {
+    background-color: #eaeae5;
+    color: #cb1a24;
+}
+@media (max-width: 768px) {
+    .movie-item {
+        width: 45%;
+    }
+}
+@media (max-width: 480px) {
+    .movie-item {
+        width: 100%;
+    }
+}

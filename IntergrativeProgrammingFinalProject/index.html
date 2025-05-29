@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Movie Search</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="css/design.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Search a Movie</h1>
+        <form method="post" action="">
+            <input type="text" id="movieTitle" name="movie" placeholder="Enter movie title...">
+            <button id="searchBtn" class="search-btn">Search</button>
+        </form>
+
+        <div class="button-group">
+            <a href="history.php"><button class="history-btn">Show Search History</button></a>
+            <a href="rated_movies.php"><button class="rated-btn">Show Rated Movies</button></a>
+        </div>
+
+        <div id="result"></div>
+        <div id="details"></div>
+        <div class="error" id="error"></div>
+    </div>
+
+    <div id="pagination"></div><br><br>
+
+    <script>
+    let movieResults = [], currentPage = 1, resultsPerPage = 5;
+    const $result = $("#result"), $pagination = $("#pagination"), $details = $("#details");
+
+    function renderPage(page) {
+        const start = (page - 1) * resultsPerPage;
+        const pageMovies = movieResults.slice(start, start + resultsPerPage);
+        $result.empty();
+        pageMovies.forEach(movie => {
+            $result.append(`
+                <div class="movie-card">
+                    <img src="${movie.poster_url}" style="width:150px">
+                    <div class="movie-info">
+                        <div class="movie-title">${movie.title} (${movie.release_date})</div>
+                        <button class="view-details" data-id="${movie.id}">View Details</button>
+                    </div>
+                </div>
+            `);
+        });
+
+        const totalPages = Math.ceil(movieResults.length / resultsPerPage);
+        $pagination.html(Array.from({length: totalPages}, (_, i) =>
+            `<button class="page-btn" data-page="${i + 1}">${i + 1}</button>`).join(" "));
+    }
+
+    function showMovieDetails(movie) {
+        $result.empty(); $pagination.empty();
+        $details.html(`
+            <div class="movie-card">
+                <div class="movie-poster"><img src="${movie.poster_url}" alt="Poster"></div>
+                <div class="movie-details">
+                    <h2 data-movie-id="${movie.movie_id}">${movie.title}</h2>
+                    <p><strong>Release:</strong> ${movie.release_date}</p>
+                    <p><strong>Genres:</strong> ${Array.isArray(movie.genres) ? movie.genres.join(', ') : 'N/A'}</p>
+                    <p><strong>TMDb Rating:</strong> ${movie.rating} / 10</p>
+                    <p><strong>Average User Rating:</strong> ${movie.avg_user_rating}</p>
+                    <p>${movie.overview}</p>
+                    <div class="rate-section">
+                        <label><strong>Rate this movie:</strong></label>
+                        <div class="star-rating" data-selected="0">
+                            ${[1,2,3,4,5].map(i => `<span class="star" data-value="${i}">&#9733;</span>`).join("")}
+                        </div>
+                        <button id="submitRating">Submit</button>
+                    </div>
+                    <div class="back-btn-container">
+                        <button id="backToResults" class="back-btn">Back</button>
+                    </div>
+                </div>
+            </div>
+        `);
+    }
+
+    // Event delegation
+    $(document).on({
+        click: function (e) {
+            e.preventDefault();
+            const title = $("#movieTitle").val().trim();
+            $("#error").text(""); $details.empty(); $result.empty(); $pagination.empty();
+
+            if (!title) return $("#error").text("Please enter a movie title.");
+
+            $(".container").addClass("move-up");
+
+            $.post("search.php", { query: title }, data => {
+                const parsed = JSON.parse(data);
+                if (parsed.error) return $("#error").text(parsed.error);
+                movieResults = parsed.results;
+                renderPage(currentPage = 1);
+            });
+        }
+    }, "#searchBtn");
+
+    $(document).on("click", ".page-btn", function () {
+        renderPage(currentPage = parseInt($(this).data("page")));
+    });
+
+    $(document).on("click", ".view-details", function () {
+        $.post("details.php", { movie_id: $(this).data("id") }, data => {
+            try {
+                const movie = JSON.parse(data);
+                if (!movie.title || !movie.poster_url) return $details.html("<p>Movie data is incomplete.</p>");
+                showMovieDetails(movie);
+            } catch {
+                $details.html("<p style='color:red;'>Could not load movie details.</p>");
+            }
+        });
+    });
+
+    $(document).on("click", "#backToResults", () => {
+        $details.empty();
+        renderPage(currentPage);
+    });
+
+    $(document).on({
+        mouseenter: function () {
+            const val = $(this).data("value");
+            $(this).siblings().addBack().each(function () {
+                $(this).toggleClass("hover", $(this).data("value") <= val);
+            });
+        },
+        mouseleave: function () {
+            $(this).children().removeClass("hover");
+        }
+    }, ".star-rating, .star");
+
+    $(document).on("click", ".star", function () {
+        const val = $(this).data("value");
+        const $stars = $(this).parent().children();
+        $(this).parent().attr("data-selected", val);
+        $stars.each(function () {
+            $(this).toggleClass("selected", $(this).data("value") <= val);
+        });
+    });
+
+    $(document).on("click", "#submitRating", function () {
+        const movieId = $(this).closest(".movie-details").find("h2").data("movie-id");
+        const ratingVal = $(".star-rating").attr("data-selected");
+        if (!movieId || ratingVal === "0") return alert("Please select a rating and try again.");
+
+        $.post("rating.php", { movie_id: movieId, rating: ratingVal }, res => {
+            try {
+                const parsed = typeof res === "string" ? JSON.parse(res) : res;
+                alert(parsed.success ? "Thanks for rating!" : "Error: " + (parsed.error || "Unknown error"));
+                if (parsed.success) $details.empty();
+            } catch {
+                alert("Error processing server response.");
+            }
+        });
+    });
+
+    // Typing placeholder animation
+    const titles = ["Enter Movie...", "Spider Man", "Superman", "Iron Man", "Inception", "Hunter X Hunter", "Tom and Jerry"];
+    let titleIndex = 0, charIndex = 0, isDeleting = false;
+    const input = document.getElementById("movieTitle");
+
+    function type() {
+        const current = titles[titleIndex];
+        input.placeholder = current.substring(0, charIndex) + "|";
+
+        if (!isDeleting && charIndex < current.length) {
+            charIndex++;
+        } else if (isDeleting && charIndex > 0) {
+            charIndex--;
+        } else {
+            isDeleting = !isDeleting;
+            if (!isDeleting) titleIndex = (titleIndex + 1) % titles.length;
+            setTimeout(type, 1000);
+            return;
+        }
+
+        setTimeout(type, isDeleting ? 50 : 120);
+    }
+
+    window.onload = type;
+    </script>
+</body>
+</html>
